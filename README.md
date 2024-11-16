@@ -25,8 +25,8 @@ cd jdbc-test
 git init
 curl -o .gitignore https://raw.githubusercontent.com/github/gitignore/main/Java.gitignore
 curl -o mysql-connector-java.jar https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar
-git add .
 touch App.java
+git add .
 git commit -m "Initial Commit"
 ```
 
