@@ -1,8 +1,10 @@
 # edu-persistency-intro
 
+
 ## Create Myswl Container
 
 ```bash
+mkdir ~/mysql_data 
 docker run --name mysql-container \
   -e MYSQL_ROOT_PASSWORD=root \
   -e MYSQL_DATABASE=test \
