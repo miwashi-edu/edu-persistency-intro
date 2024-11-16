@@ -93,3 +93,9 @@ git reset --hard
 git clean -df
 ```
 
+## Visit MySql
+
+```bash
+docker exec -it mysql-container bash
+```
+
