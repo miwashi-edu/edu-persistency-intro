@@ -1,101 +1,106 @@
 # edu-persistency-intro
 
 
-## Create Myswl Container
+## Functions
 
-```bash
-mkdir ~/mysql_data 
-docker run --name mysql-container \
-  -e MYSQL_ROOT_PASSWORD=root \
-  -e MYSQL_DATABASE=test \
-  -e MYSQL_USER=test \
-  -e MYSQL_PASSWORD=test \
-  -v ~/mysql_data:/var/lib/mysql \
-  -p 3306:3306 \
-  -d mysql:8.0
-```
+## main
 
-## Java Connect
-
-```bash
-cd ~
-cd ws
-mkdir jdbc-test
-cd jdbc-test
-git init
-curl -o .gitignore https://raw.githubusercontent.com/github/gitignore/main/Java.gitignore
-curl -o mysql-connector-java.jar https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar
-touch App.java
-git add .
-git commit -m "Initial Commit"
-```
-
-```bash
-cat > App.java << 'EOF'
+```java
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 public class App {
-    // JDBC URL, username and password of MySQL server
+    // JDBC URL, username, and password of MySQL server
     private static final String URL = "jdbc:mysql://localhost:3306/test";
     private static final String USER = "test";
     private static final String PASSWORD = "test";
 
-    // JDBC variables for opening and managing connection
     private static Connection connection;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         try {
-            // Load MySQL JDBC driver
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            
-            // Establish connection using the DriverManager
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            if (connection != null) {
-                System.out.println("Connected to the database successfully!");
-            } else {
-                System.out.println("Failed to make connection!");
-            }
-        } catch (ClassNotFoundException e) {
-            System.out.println("MySQL JDBC Driver not found.");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            System.out.println("Connection Failed! Check output console.");
-            e.printStackTrace();
+            connect();
+            dropTableIfExists();
+            createTable();
+            insertIntoTable("Alice");
+            insertIntoTable("Bob");
+            selectAllFromTable();
         } finally {
-            // Close connection
             if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                connection.close();
             }
         }
     }
 }
-EOF
 ```
 
-## Compile and Run App
+## connect
 
-```bash
-javac -cp .:mysql-connector-java.jar App.java
-java -cp .:mysql-connector-java.jar App
+```java
+private static void connect() throws SQLException {
+    connection = DriverManager.getConnection(URL, USER, PASSWORD);
+    System.out.println("Connected to the database successfully!");
+}
 ```
 
+## drop if exists
 
-## Reset and Restart to last commit
-
-```bash
-git reset --hard
-git clean -df
+```java
+private static void dropTableIfExists() throws SQLException {
+    String sql = "DROP TABLE IF EXISTS User";
+    try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(sql);
+        System.out.println("Table 'User' dropped if it existed.");
+    }
+}
 ```
 
-## Visit MySql
+## create table
 
-```bash
-docker exec -it mysql-container bash
+```java
+private static void createTable() throws SQLException {
+    String sql = """
+        CREATE TABLE User (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(50) NOT NULL
+        )
+    """;
+    try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(sql);
+        System.out.println("Table 'User' created successfully.");
+    }
+}
 ```
 
+## insert into
+
+```java
+private static void insertIntoTable(String name) throws SQLException {
+    String sql = String.format("INSERT INTO User (name) VALUES ('%s')", name);
+    try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(sql);
+        System.out.println("Inserted user: " + name);
+    }
+}
+```
+
+## select all
+
+```java
+private static void selectAllFromTable() throws SQLException {
+    String sql = "SELECT * FROM User";
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+
+        System.out.println("Users in 'User' table:");
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            System.out.println("ID: " + id + ", Name: " + name);
+        }
+    }
+}
+```
